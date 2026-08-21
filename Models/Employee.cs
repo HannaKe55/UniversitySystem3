@@ -21,11 +21,13 @@ public partial class Employee
 
     public string NationalCode { get; set; } = null!;
 
+    public int? LoginId { get; set; }
+
     public virtual ICollection<Class> Classes { get; set; } = new List<Class>();
 
     public virtual ICollection<CourseReg> CourseRegs { get; set; } = new List<CourseReg>();
 
-    public virtual ICollection<Login> Logins { get; set; } = new List<Login>();
+    public virtual Login? Login { get; set; }
 
     public virtual Major? Major { get; set; }
 

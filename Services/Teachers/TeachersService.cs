@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using UniversitySystem3.Common.Exceptions;
 using UniversitySystem3.Dtos;
+using UniversitySystem3.Models;
 using UniversitySystem3.Repositories;
 using UniversitySystem3.Services.Common;
 
@@ -19,7 +20,7 @@ public class TeachersService : ITeachersService
     public async Task<ServiceResult<object>> CreateAsync(int currentEmployeeId, RegisterTeacherDto dto)
     {
         var currentEmployee = await _uow.Employees.GetByIdAsync(currentEmployeeId)
-                ?? throw new NotFoundException("اطلاعات کارمند لاگین‌شده پیدا نشد.");
+         ?? throw new NotFoundException("اطلاعات کارمند لاگین‌شده پیدا نشد.");
 
         if (currentEmployee.RoleId == 2)
             throw new ForbiddenException("استاد اجازه‌ی ثبت استاد جدید را ندارد.");
@@ -35,6 +36,36 @@ public class TeachersService : ITeachersService
         if (nationalCodeExists)
             throw new ConflictException("این کد ملی قبلاً ثبت شده است.");
 
+        var login = new Login
+        {
+            Uername = dto.EmpCode,
+            Pass = PasswordHasher.Hash(dto.NationalCode)
+        };
+
+        var teacher = new Models.Employee
+        {
+            EmpCode = dto.EmpCode,
+            NationalCode = dto.NationalCode,
+            FullName = dto.FullName,
+            Title = dto.Title,
+            LastDegree = dto.LastDegree,
+            MajorId = currentEmployee.MajorId,
+            RoleId = 2,
+            Login = login
+        };
+
+        await _uow.Employees.AddAsync(teacher);
+        await _uow.SaveChangesAsync();
+
+        return ServiceResult<object>.Ok(new
+        {
+            message = "استاد با موفقیت ثبت شد.",
+            employeeId = teacher.EmployeeId,
+            username = login.Uername,
+            password = dto.NationalCode
+        });
+
+        /*
         var teacher = new Models.Employee
         {
             EmpCode = dto.EmpCode,
@@ -52,20 +83,13 @@ public class TeachersService : ITeachersService
         var login = new Models.Login
         {
             Uername = dto.EmpCode,
-            Pass = dto.NationalCode,
-            EmpId = teacher.EmployeeId
+            Pass = PasswordHasher.Hash(dto.NationalCode),
+
         };
 
         await _uow.Login.AddAsync(login);
-        await _uow.SaveChangesAsync();
+        await _uow.SaveChangesAsync(); */
 
-        return ServiceResult<object>.Ok(new
-        {
-            message = "استاد با موفقیت ثبت شد.",
-            employeeId = teacher.EmployeeId,
-            username = login.Uername,
-            password = login.Pass
-        });
     }
 
 
@@ -112,25 +136,33 @@ public class TeachersService : ITeachersService
 
     public async Task<ServiceResult<object>> DeleteAsync(int currentEmployeeId, int teacherId)
     {
-        var currentEmployee = await _uow.Employees.GetByIdAsync(currentEmployeeId) ??
-             throw new NotFoundException("اطلاعات کارمند لاگین شده پیدا نشد");
+        var currentEmployee = await _uow.Employees.GetByIdAsync(currentEmployeeId)
+        ?? throw new NotFoundException("اطلاعات کارمند لاگین‌شده پیدا نشد.");
 
         if (currentEmployee.RoleId == 2)
-            throw new ForbiddenException("استاد اجازه حذف استاد دیگر را ندارد.");
+            throw new ForbiddenException("استاد اجازه‌ی حذف استاد دیگر را ندارد.");
 
-        var teacher =await _uow.Employees.Query()
-            .FirstOrDefaultAsync(e => e.EmployeeId == teacherId && e.RoleId == 2) ??
-            throw new NotFoundException("استاد پیدا نشد");
+        var teacher = await _uow.Employees.Query()
+            .FirstOrDefaultAsync(e => e.EmployeeId == teacherId && e.RoleId == 2)
+            ?? throw new NotFoundException("استاد پیدا نشد.");
 
-        if(teacher.MajorId != currentEmployee.MajorId)
+        if (teacher.MajorId != currentEmployee.MajorId)
             throw new ForbiddenException();
 
-        var login = await _uow.Login.Query().FirstOrDefaultAsync(e => e.EmpId == teacherId);
-        if(login!= null)
-            _uow.Login.Remove(login);
+        var loginId = teacher.LoginId;
 
         _uow.Employees.Remove(teacher);
         await _uow.SaveChangesAsync();
+
+        if (loginId.HasValue)
+        {
+            var login = await _uow.Login.GetByIdAsync(loginId.Value);
+            if (login != null)
+            {
+                _uow.Login.Remove(login);
+                await _uow.SaveChangesAsync();
+            }
+        }
 
         return ServiceResult<object>.Ok(new { message = "استاد با موفقیت حذف شد." });
     }

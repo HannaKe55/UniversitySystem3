@@ -164,6 +164,8 @@ public partial class UniversityDBContext : DbContext
 
             entity.ToTable("Employee");
 
+            entity.HasIndex(e => e.LoginId, "UQ_Employee_LoginId").IsUnique();
+
             entity.Property(e => e.EmployeeId).HasColumnName("EmployeeID");
             entity.Property(e => e.EmpCode)
                 .HasMaxLength(10)
@@ -176,6 +178,10 @@ public partial class UniversityDBContext : DbContext
                 .IsFixedLength();
             entity.Property(e => e.RoleId).HasColumnName("RoleID");
             entity.Property(e => e.Title).HasMaxLength(400);
+
+            entity.HasOne(d => d.Login).WithOne(p => p.Employee)
+                .HasForeignKey<Employee>(d => d.LoginId)
+                .HasConstraintName("FK_Employee_Login");
 
             entity.HasOne(d => d.Major).WithMany(p => p.Employees)
                 .HasForeignKey(d => d.MajorId)
@@ -210,18 +216,8 @@ public partial class UniversityDBContext : DbContext
             entity.ToTable("_Login");
 
             entity.Property(e => e.LoginId).HasColumnName("LoginID");
-            entity.Property(e => e.EmpId).HasColumnName("EmpID");
-            entity.Property(e => e.Pass).HasMaxLength(50);
-            entity.Property(e => e.StudentId).HasColumnName("StudentID");
+            entity.Property(e => e.Pass).HasMaxLength(100);
             entity.Property(e => e.Uername).HasMaxLength(50);
-
-            entity.HasOne(d => d.Emp).WithMany(p => p.Logins)
-                .HasForeignKey(d => d.EmpId)
-                .HasConstraintName("FK__Login_Employee");
-
-            entity.HasOne(d => d.Student).WithMany(p => p.Logins)
-                .HasForeignKey(d => d.StudentId)
-                .HasConstraintName("FK__Login_Student");
         });
 
         modelBuilder.Entity<Major>(entity =>
@@ -281,6 +277,8 @@ public partial class UniversityDBContext : DbContext
 
             entity.ToTable("Student");
 
+            entity.HasIndex(e => e.LoginId, "UQ_Student_LoginId").IsUnique();
+
             entity.Property(e => e.StudentId).HasColumnName("StudentID");
             entity.Property(e => e.CurrentTermId).HasColumnName("CurrentTermID");
             entity.Property(e => e.EnteranceYearId).HasColumnName("EnteranceYearID");
@@ -300,6 +298,10 @@ public partial class UniversityDBContext : DbContext
             entity.HasOne(d => d.EnteranceYear).WithMany(p => p.StudentEnteranceYears)
                 .HasForeignKey(d => d.EnteranceYearId)
                 .HasConstraintName("FK_Student_Term2");
+
+            entity.HasOne(d => d.Login).WithOne(p => p.Student)
+                .HasForeignKey<Student>(d => d.LoginId)
+                .HasConstraintName("FK_Student_Login");
 
             entity.HasOne(d => d.Major).WithMany(p => p.Students)
                 .HasForeignKey(d => d.MajorId)

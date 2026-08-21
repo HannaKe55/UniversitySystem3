@@ -1,8 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using UniversitySystem3.Services.Class;
 
 namespace UniversitySystem3.Controllers;
 
+[ApiController]
+[Route("api/class-locations")]
+[Authorize(Roles = "Employee")]
 public class ClassLocationController: ControllerBase
 {
     private readonly IClassService _service;

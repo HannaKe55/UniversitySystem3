@@ -11,11 +11,7 @@ public partial class Login
 
     public string? Pass { get; set; }
 
-    public int? EmpId { get; set; }
-
-    public int? StudentId { get; set; }
-
-    public virtual Employee? Emp { get; set; }
+    public virtual Employee? Employee { get; set; }
 
     public virtual Student? Student { get; set; }
 }

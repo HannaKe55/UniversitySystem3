@@ -18,9 +18,10 @@ public class ClassesController : ControllerBase
     private readonly IClassService _service;
     private readonly ITeacherClassService _teacherClassService;
 
-    public ClassesController(IClassService service)
+    public ClassesController(IClassService service, ITeacherClassService teacherClassService)
     {
         _service = service;
+        _teacherClassService = teacherClassService;
     }
 
     private int GetCurrentEmployeeId()

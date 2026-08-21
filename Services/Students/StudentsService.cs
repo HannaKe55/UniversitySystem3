@@ -1,13 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using UniversitySystem3.Dtos;
 using UniversitySystem3.Common.Exceptions;
-using UniversitySystem3.Repositories;
+using UniversitySystem3.Dtos;
 using UniversitySystem3.Models;
+using UniversitySystem3.Repositories;
 using UniversitySystem3.Services.Common;
 
 namespace UniversitySystem3.Services.Students;
-
-
 
 public class StudentsService : IStudentService
 {
@@ -31,12 +29,19 @@ public class StudentsService : IStudentService
         if (majorId == null)
             return ServiceResult<object>.Fail("رشته‌ی این کارمند آموزش مشخص نیست.");
 
-        var term = await _uow.Terms.Query().FirstOrDefaultAsync(t => t.TermTitle == dto.TermTitle)
+        var term = await _uow.Terms.Query()
+            .FirstOrDefaultAsync(t => t.TermTitle == dto.TermTitle)
             ?? throw new NotFoundException("ترمی با این عنوان پیدا نشد.");
 
         bool codeExists = await _uow.Students.Query().AnyAsync(s => s.StudentCode == dto.StudentCode);
         if (codeExists)
             throw new ConflictException("این کد دانشجویی قبلاً ثبت شده است.");
+
+        var login = new Login
+        {
+            Uername = dto.StudentCode,
+            Pass = PasswordHasher.Hash(dto.NationalCode)
+        };
 
         var student = new Student
         {
@@ -44,20 +49,11 @@ public class StudentsService : IStudentService
             NationalCode = dto.NationalCode,
             FullName = dto.FullName,
             EnteranceYearId = term.TermId,
-            MajorId = majorId
+            MajorId = majorId,
+            Login = login
         };
 
         await _uow.Students.AddAsync(student);
-        await _uow.SaveChangesAsync();
-
-        var login = new Login
-        {
-            Uername = dto.StudentCode,
-            Pass = dto.NationalCode,
-            StudentId = student.StudentId
-        };
-
-        await _uow.Login.AddAsync(login);
         await _uow.SaveChangesAsync();
 
         return ServiceResult<object>.Ok(new
@@ -65,7 +61,7 @@ public class StudentsService : IStudentService
             message = "دانشجو با موفقیت ثبت شد.",
             studentId = student.StudentId,
             username = login.Uername,
-            password = login.Pass,
+            password = dto.NationalCode,
             term = term.TermTitle
         });
     }
@@ -101,9 +97,9 @@ public class StudentsService : IStudentService
                 Students = g.Select(s => new StudentListItemDto
                 {
                     StudentId = s.StudentId,
-                    FullName = s.FullName ?? string.Empty,
-                    StudentCode = s.StudentCode ?? string.Empty,
-                    MajorName = s.Major?.MajorName ?? string.Empty
+                    FullName = s.FullName ?? "",
+                    StudentCode = s.StudentCode ?? "",
+                    MajorName = s.Major?.MajorName ?? ""
                 }).ToList()
             })
             .ToList();
@@ -153,13 +149,20 @@ public class StudentsService : IStudentService
         if (student.MajorId != majorId)
             throw new ForbiddenException();
 
-        // اول اکانت لاگین مرتبط رو حذف کن (چون به این دانشجو وابسته‌ست)
-        var login = await _uow.Login.Query().FirstOrDefaultAsync(l => l.StudentId == studentId);
-        if (login != null)
-            _uow.Login.Remove(login);
+        var loginId = student.LoginId;
 
         _uow.Students.Remove(student);
         await _uow.SaveChangesAsync();
+
+        if (loginId.HasValue)
+        {
+            var login = await _uow.Login.GetByIdAsync(loginId.Value);
+            if (login != null)
+            {
+                _uow.Login.Remove(login);
+                await _uow.SaveChangesAsync();
+            }
+        }
 
         return ServiceResult<object>.Ok(new { message = "دانشجو با موفقیت حذف شد." });
     }
@@ -170,10 +173,20 @@ public class StudentsService : IStudentService
         var student = await _uow.Students.Query()
             .Include(s => s.Major)
             .Include(s => s.CurrentTerm)
+            .Include(s => s.EnteranceYear)
             .FirstOrDefaultAsync(s => s.StudentId == studentId)
             ?? throw new NotFoundException("اطلاعات دانشجو پیدا نشد.");
 
-        return ServiceResult<object>.Ok(student);
+        return ServiceResult<object>.Ok(new
+        {
+            student.StudentId,
+            student.StudentCode,
+            student.FullName,
+            MajorName = student.Major?.MajorName,
+            student.MajorId,
+            CurrentTerm = student.CurrentTerm?.TermCode,
+            EnteranceYear = student.EnteranceYear?.EnteranceYear
+        });
     }
 
     // ============ PATCH /api/students/me ============

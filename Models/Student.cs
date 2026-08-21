@@ -19,6 +19,8 @@ public partial class Student
 
     public int? CurrentTermId { get; set; }
 
+    public int? LoginId { get; set; }
+
     public virtual ICollection<Attendance> Attendances { get; set; } = new List<Attendance>();
 
     public virtual ICollection<CourseReg> CourseRegs { get; set; } = new List<CourseReg>();
@@ -27,7 +29,7 @@ public partial class Student
 
     public virtual Term? EnteranceYear { get; set; }
 
-    public virtual ICollection<Login> Logins { get; set; } = new List<Login>();
+    public virtual Login? Login { get; set; }
 
     public virtual Major? Major { get; set; }
 
