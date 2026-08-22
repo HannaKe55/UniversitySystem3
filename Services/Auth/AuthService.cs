@@ -20,9 +20,9 @@ public class AuthService : IAuthService
     public async Task<ServiceResult<LoginResponseDto>> LoginAsync(LoginRequestDto dto)
     {
         var login = await _uow.Login.Query()
-            .Include(l => l.Employee).ThenInclude(e => e!.Role)
-            .Include(l => l.Student)
-            .FirstOrDefaultAsync(l => l.Uername == dto.Username);
+       .Include(l => l.Employee).ThenInclude(e => e!.Role)
+       .Include(l => l.Student)
+       .FirstOrDefaultAsync(l => l.Uername == dto.Username);
 
         if (login == null || string.IsNullOrEmpty(login.Pass) ||
             !PasswordHasher.Verify(dto.Password, login.Pass))
@@ -30,7 +30,6 @@ public class AuthService : IAuthService
             return ServiceResult<LoginResponseDto>.Fail("نام کاربری یا رمز عبور اشتباه است.");
         }
 
-        // کاربر کارمند/استاد است
         if (login.Employee != null)
         {
             var roleName = login.Employee.Role?.RoleName ?? "Employee";
@@ -45,7 +44,6 @@ public class AuthService : IAuthService
             });
         }
 
-        // کاربر دانشجو است
         if (login.Student != null)
         {
             var token = _tokenService.GenerateToken(login.Student.StudentId, "Student", login.Uername!);

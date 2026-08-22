@@ -166,4 +166,33 @@ public class TeachersService : ITeachersService
 
         return ServiceResult<object>.Ok(new { message = "استاد با موفقیت حذف شد." });
     }
+
+    // ============ PUT /api/teachers/{id} ============
+    public async Task<ServiceResult<object>> UpdateAsync(int currentEmployeeId, int teacherId, UpdateTeacherDto dto)
+    {
+        var currentEmployee = await _uow.Employees.GetByIdAsync(currentEmployeeId)
+            ?? throw new NotFoundException("اطلاعات کارمند لاگین‌شده پیدا نشد.");
+
+        if (currentEmployee.RoleId == 2)
+            throw new ForbiddenException("استاد اجازه‌ی ویرایش اطلاعات استاد دیگر را ندارد.");
+
+        if (currentEmployee.MajorId == null)
+            return ServiceResult<object>.Fail("رشته‌ی این کارمند آموزش مشخص نیست.");
+
+        var teacher = await _uow.Employees.Query()
+            .FirstOrDefaultAsync(e => e.EmployeeId == teacherId && e.RoleId == 2)
+            ?? throw new NotFoundException("استاد پیدا نشد.");
+
+        if (teacher.MajorId != currentEmployee.MajorId)
+            throw new ForbiddenException();
+
+        teacher.FullName = dto.FullName;
+        teacher.Title = dto.Title;
+        teacher.LastDegree = dto.LastDegree;
+
+        _uow.Employees.Update(teacher);
+        await _uow.SaveChangesAsync();
+
+        return ServiceResult<object>.Ok(new { message = "اطلاعات استاد با موفقیت ویرایش شد." });
+    }
 }

@@ -23,6 +23,8 @@ public class TeacherClassService : ITeacherClassService
 
         }
 
+       //استاد میتونه در پنل کاربری خودش کلاس هایی که براش تعریف شده رو ببینه
+
         public async Task<ServiceResult<object>> GetMyClassesAsync(int teacherId,
             List<int>? termIds, List<int>? enteranceYearIds, List<int> lessonIds)
 
@@ -76,6 +78,8 @@ public class TeacherClassService : ITeacherClassService
 
             return ServiceResult<object>.Ok(result);
         }
+
+       //استاد میتونه برای دانشجویان نمره ثبت کنه
         public async Task<ServiceResult<object>> SetScoreAsync(int teacherId, int courseRegId, SetScoreDto dto)
         {
             if (!await IsTeacher(teacherId))
@@ -106,7 +110,7 @@ public class TeacherClassService : ITeacherClassService
 
             return ServiceResult<object>.Ok(new { message = "نمره با موفقیت ثبت شد." });
         }
-
+        //استاد میتونه دانشجو رو از کلاس مربوطه حذف کنه
         public async Task<ServiceResult<object>> RemoveStudentAsync(int teacherId, int courseRegId)
         {
             if (!await IsTeacher(teacherId))
@@ -139,7 +143,7 @@ public class TeacherClassService : ITeacherClassService
 
 
         }
-
+    //استاد میتونه کلاس های خودش رو بر اساس اسم درس فیلتر کنه
         public async Task<ServiceResult<object>> GetFilterLessonsAsync(int teacherId)
         {
             if (!await IsTeacher(teacherId))
@@ -156,7 +160,7 @@ public class TeacherClassService : ITeacherClassService
 
             return ServiceResult<object>.Ok(lessons);
         }
-
+    //استاد میتونه کلاس های خودش رو بر اساس سال ورودی فیلتر کنه
         public async Task<ServiceResult<object>> GetFilterEnteranceYearsAsync(int teacherId)
         {
             if (!await IsTeacher(teacherId))
@@ -216,6 +220,7 @@ public class TeacherClassService : ITeacherClassService
             return ServiceResult<ClassStudentListDto>.Ok(result);
         }
 
+    // استاد میاد 8 ترم اخیرش رو میبینه که بعد بره توی هر ترم کلاس هاشو ببینه
         public async Task<ServiceResult<object>> GetRecentTermsAsync(int teacherId)
         {
             if (!await IsTeacher(teacherId))

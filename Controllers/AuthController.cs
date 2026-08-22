@@ -26,5 +26,7 @@ namespace UniversitySystem3.Controllers
 
             return Ok(result.Data);
         }
+
+
     }
 }

@@ -8,5 +8,6 @@ public interface ITeachersService
     Task<ServiceResult<object>> CreateAsync(int currentEmployeeId, RegisterTeacherDto dto);
     Task<ServiceResult<object>> GetAllAsync(int currentEmployeeId);
     Task<ServiceResult<object>> GetByIdAsync(int currentEmployeeId, int teacherId);
+    Task<ServiceResult<object>> UpdateAsync(int currentEmployeeId, int teacherId, UpdateTeacherDto dto);
     Task<ServiceResult<object>> DeleteAsync(int currentEmployeeId, int teacherId);
 }

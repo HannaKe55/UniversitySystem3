@@ -9,6 +9,7 @@ using UniversitySystem3.Repositories;
 using UniversitySystem3.Services;
 using UniversitySystem3.Services.Auth;
 using UniversitySystem3.Services.Class;
+using UniversitySystem3.Services.Employees;
 using UniversitySystem3.Services.Students;
 using UniversitySystem3.Services.Teachers;
 using UniversitySystem3.Services.Terms;
@@ -65,6 +66,7 @@ builder.Services.AddScoped<IStudentService, StudentsService>();
 builder.Services.AddScoped<IStudentInfoService, StudentInfoService>();
 builder.Services.AddScoped<IClassService, ClassService>();
 builder.Services.AddScoped<ITermService, TermService>();
+builder.Services.AddScoped<IEmployeeService, EmployeeService>();
    
 builder.Services.AddAuthentication(options =>
 {
@@ -106,4 +108,4 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+app.Run("https://0.0.0.0:7186");

@@ -40,6 +40,7 @@ public class ClassesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<IActionResult> Create(CreateClassDto dto)
     {
         var result = await _service.CreateClassAsync(GetCurrentEmployeeId(), dto);
@@ -79,6 +80,7 @@ public class ClassesController : ControllerBase
     }
 
     [HttpGet("{classId}/course-registrations")]
+    [Authorize(Roles = "Teacher")]
     public async Task<IActionResult> GetClassStudents(int classId)
     {
         var result = await _teacherClassService.GetClassStudentsAsync(GetCurrentEmployeeId(), classId);

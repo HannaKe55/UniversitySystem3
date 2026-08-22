@@ -66,6 +66,7 @@ public class TeachersController : ControllerBase
     }
 
     [HttpGet("me/classes")]
+    [Authorize(Roles = "Teacher")]
     public async Task<IActionResult> GetMyClasses(
     [FromQuery] List<int>? termIds,
     [FromQuery] List<int>? enteranceYearIds,
@@ -78,9 +79,18 @@ public class TeachersController : ControllerBase
     }
 
     [HttpGet("me/classes/filters/terms")]
+    [Authorize(Roles = "Teacher")]
     public async Task<IActionResult> GetRecentTerms()
     {
         var result = await _teacherClassService.GetRecentTermsAsync(GetCurrentEmployeeId());
+        return result.Success ? Ok(result.Data) : MapError(result);
+    }
+
+    // PUT /api/teachers/{id}
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, UpdateTeacherDto dto)
+    {
+        var result = await _service.UpdateAsync(GetCurrentEmployeeId(), id, dto);
         return result.Success ? Ok(result.Data) : MapError(result);
     }
 
